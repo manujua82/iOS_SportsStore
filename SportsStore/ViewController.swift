@@ -8,7 +8,10 @@
 
 import UIKit
 
-class ViewController: UIViewController {
+class ViewController: UIViewController, UITableViewDataSource {
+    
+    @IBOutlet weak var tableView: UITableView!
+    @IBOutlet weak var totalStockLabel: UILabel!
     
     var products = [
         ("Kayak", "A boat for one person", "Watersports", 275.0, 10),
@@ -23,7 +26,63 @@ class ViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        displayStockTotal()
+    }
+    
+    
+    @IBAction func stockLevelDidChange(_ sender: Any) {
+        print("stockLevelDidChange")
+        if var currentCell = sender as? UIView {
+            while(true){
+                currentCell  = currentCell.superview!
+                if let cell = currentCell as? ProductTableViewCell{
+                    if let id = cell.productId {
+                        var newStockLevel: Int?
+                        
+                        if let stepper = sender as? UIStepper{
+                            newStockLevel = Int(stepper.value)
+                        }else if let textfield = sender as? UITextField {
+                            if let newValue = Int(textfield.text!){
+                                newStockLevel = newValue
+                            }
+                        }
+                        
+                        if let level = newStockLevel {
+                            products[id].4 = level;
+                            cell.stockStepper.value = Double(level);
+                            cell.stockField.text = String(level);
+                        }
+                    }
+                    break
+                }
+            }
+            displayStockTotal()
+        }
+    }
+    
+    /* Display the stock total in the totalStockLabel */
+    func displayStockTotal(){
+        let stockTotal = products.reduce(0, {(total, product) -> Int in return total + product.4})
+        totalStockLabel.text = "\(stockTotal) Products in Stock"
+    }
+    
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return products.count;
+    }
+    
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
+        let product = products[indexPath.row]
+        
+        let cell = tableView.dequeueReusableCell(withIdentifier: "ProductCell", for: indexPath) as! ProductTableViewCell
+        
+        cell.productId = indexPath.row
+        cell.nameLabel.text = product.0
+        cell.descriptionLabel.text = product.1
+        cell.stockStepper.value = Double(product.4)
+        cell.stockField.text = String(product.4)
+
+        return cell
     }
 
 
